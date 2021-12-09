@@ -1,7 +1,5 @@
 fun main() {
 
-    fun String.sortCharacters() = this.toSortedSet().joinToString("")
-
     fun part1(input: List<String>): Int {
 
         return input.map { it.substringAfter(" | ").split(" ").filter(String::isNotBlank).map { str -> str.length } }
@@ -12,21 +10,20 @@ fun main() {
     fun part2(input: List<String>): Int {
         return input.map { it.split(" | ") }
             .map {
-                it[0].split(" ").map { str -> str.sortCharacters() } to it[1].split(" ")
-                    .map { str -> str.sortCharacters() }
+                it[0].split(" ").map { str -> str.toSortedSet() } to it[1].split(" ")
+                    .map { str -> str.toSortedSet() }
             }
             .sumOf { io ->
-                val allCodes = io.first + io.second
-                val one = allCodes.firstOrNull { it.length == 2 } ?: "1"
-                val three = allCodes.firstOrNull { it.length == 5 && it.contains(one) } ?: "3"
-                val four = allCodes.firstOrNull { it.length == 4 } ?: "4"
-                val five = allCodes.firstOrNull { it.length == 5 && (it.toSortedSet() - four.toSortedSet()).size == 2 } ?: "5"
-                val two = allCodes.firstOrNull { it.length == 5 && it != five } ?: "2"
-                val six = allCodes.firstOrNull { it.length == 6 && (!it.contains(one[0]) || !it.contains(one[1])) } ?: "6"
-                val seven = allCodes.firstOrNull { it.length == 3 } ?: "7"
-                val eight = allCodes.firstOrNull { it.length == 7 } ?: "8"
-                val nine = allCodes.firstOrNull { it.length == 6 && it != six && (it.toSortedSet() - four.toSortedSet()).size == 2 } ?: "9"
-                val zero = allCodes.firstOrNull { it.length == 6 && it != six && it != nine } ?: "0"
+                val one = io.first.first { it.size == 2 }
+                val three = io.first.first { it.size == 5 && it.containsAll(one) }
+                val four = io.first.first { it.size == 4 }
+                val five = io.first.first { it.size == 5 && it != three && (it - four).size == 2 }
+                val two = io.first.first { it.size == 5  && it != three && it != five }
+                val six = io.first.first { it.size == 6 && !it.containsAll(one) }
+                val seven = io.first.first { it.size == 3 }
+                val eight = io.first.first { it.size == 7 }
+                val nine = io.first.first { it.size == 6 && it != six && (it - four).size == 2 }
+                val zero = io.first.first { it.size == 6 && it != six && it != nine }
 
                 io.second.joinToString("") {
                     val number = when (it) {
