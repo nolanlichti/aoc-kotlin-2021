@@ -46,7 +46,7 @@ fun main() {
                     for (i in lowest..highest) {
                         points.add(Point(it.first.x, i))
                     }
-                } else if (it.first.y == it.second.y){
+                } else if (it.first.y == it.second.y) {
                     val lowest = min(it.first.x, it.second.x)
                     val highest = max(it.first.x, it.second.x)
                     for (i in lowest..highest) {
