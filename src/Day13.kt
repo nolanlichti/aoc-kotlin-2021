@@ -4,13 +4,11 @@ fun main() {
         val coordinatePattern = Regex("""(\d+),(\d+)""")
         val instructionPattern = Regex("""fold along ([xy])=(\d+)""")
         val dots = input.mapNotNull { coordinatePattern.matchEntire(it) }
-            .map { Dot(x = it.destructured.component1().toInt(), y = it.destructured.component2().toInt()) }
+            .map { mutableMapOf(Coordinate.X to it.destructured.component1().toInt(), Coordinate.Y to it.destructured.component2().toInt())  }
         val folds = input.mapNotNull { instructionPattern.matchEntire(it) }
-            .map { Fold(axis = it.destructured.component1(), value = it.destructured.component2().toInt()) }
+            .map { Fold(axis = Coordinate.valueOf(it.destructured.component1()), value = it.destructured.component2().toInt()) }
 
-
-
-        return dots.size
+        return dots.foldIt(folds[0]).size
     }
 
     fun part2(input: List<String>): Int {
@@ -33,10 +31,15 @@ fun main() {
     println("Part 2: ${part2(input)}")
 }
 
-data class Dot(val x: Int, val y: Int)
-data class Fold(val axis: String, val value: Int)
+enum class Coordinate { X, Y }
+data class Fold(val axis: Coordinate, val value: Int)
 
-fun List<Dot>.fold(fold: Fold): List<Dot> {
-    val predicate =
-    val half = this.filter {  }
+typealias Dot = MutableMap<Coordinate, Int>
+
+fun List<Dot>.foldIt(fold: Fold): List<Dot> {
+    val max = this.maxOf { it[fold.axis] ?: 0 }
+    val result = this.toCollection(mutableListOf()).toList()
+    result.filter { (it[fold.axis] ?: 0) > fold.value }
+        .forEach { it[fold.axis] = max - it[fold.axis]!! }
+    return result.distinct()
 }
