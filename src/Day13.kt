@@ -1,18 +1,23 @@
 fun main() {
     debug.enabled = false
+
     fun part1(input: List<String>): Int {
-        val coordinatePattern = Regex("""(\d+),(\d+)""")
-        val instructionPattern = Regex("""fold along ([xy])=(\d+)""")
-        val dots = input.mapNotNull { coordinatePattern.matchEntire(it) }
-            .map { mutableMapOf(Coordinate.X to it.destructured.component1().toInt(), Coordinate.Y to it.destructured.component2().toInt())  }
-        val folds = input.mapNotNull { instructionPattern.matchEntire(it) }
-            .map { Fold(axis = Coordinate.valueOf(it.destructured.component1()), value = it.destructured.component2().toInt()) }
+        val dots = input.getDots()
+        val folds = input.getFolds()
 
         return dots.foldIt(folds[0]).size
     }
 
-    fun part2(input: List<String>): Int {
-        return input.size
+    fun part2(input: List<String>) {
+        val dots = input.getDots()
+        val folds = input.getFolds()
+
+        var currentDots = dots
+        folds.forEach { fold ->
+            currentDots = currentDots.foldIt(fold)
+            println(currentDots)
+            currentDots.print()
+        }
     }
 
     // test if implementation meets criteria from the description, like:
@@ -25,10 +30,11 @@ fun main() {
     println()
     println("Part 1: ${part1(input)}")
 
-    val test2 = part2(testInput)
-    val expected2 = 0
-    check(test2 == expected2) { "Expected $expected2, was $test2" }
-    println("Part 2: ${part2(input)}")
+//    val test2 = part2(testInput)
+//    val expected2 = 0
+//    check(test2 == expected2) { "Expected $expected2, was $test2" }
+//    println("Part 2: ${part2(input)}")
+    part2(input)
 }
 
 enum class Coordinate { X, Y }
@@ -43,3 +49,34 @@ fun List<Dot>.foldIt(fold: Fold): List<Dot> {
         .forEach { it[fold.axis] = max - it[fold.axis]!! }
     return result.distinct()
 }
+
+fun List<Dot>.print() {
+    val maxX = this.maxOf { it[Coordinate.Y] ?: 0}
+    val maxY = this.maxOf { it[Coordinate.X] ?: 0 }
+
+    (0..maxY).forEach { y->
+        (0..maxX).forEach { x ->
+            print(if (this.any { it[Coordinate.X] == x && it[Coordinate.Y] == y }) "#" else ".")
+        }
+        println()
+    }
+}
+
+val coordinatePattern = Regex("""^(\d+),(\d+)$""")
+val instructionPattern = Regex("""^fold along ([xy])=(\d+)$""")
+
+fun List<String>.getDots() = this.mapNotNull { coordinatePattern.matchEntire(it) }
+    .map {
+        mutableMapOf(
+            Coordinate.X to it.destructured.component1().toInt(),
+            Coordinate.Y to it.destructured.component2().toInt()
+        )
+    }
+
+fun List<String>.getFolds() = this.mapNotNull { instructionPattern.matchEntire(it) }
+    .map {
+        Fold(
+            axis = Coordinate.valueOf(it.destructured.component1().uppercase()),
+            value = it.destructured.component2().toInt()
+        )
+    }
