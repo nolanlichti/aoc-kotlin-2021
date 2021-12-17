@@ -1,3 +1,5 @@
+import kotlin.math.abs
+
 fun main() {
     debug.enabled = false
 
@@ -15,9 +17,8 @@ fun main() {
         var currentDots = dots
         folds.forEach { fold ->
             currentDots = currentDots.foldIt(fold)
-            println(currentDots)
-            currentDots.print()
         }
+        currentDots.print()
     }
 
     // test if implementation meets criteria from the description, like:
@@ -34,6 +35,7 @@ fun main() {
 //    val expected2 = 0
 //    check(test2 == expected2) { "Expected $expected2, was $test2" }
 //    println("Part 2: ${part2(input)}")
+    part2(testInput)
     part2(input)
 }
 
@@ -42,24 +44,23 @@ data class Fold(val axis: Coordinate, val value: Int)
 
 typealias Dot = MutableMap<Coordinate, Int>
 
-fun List<Dot>.foldIt(fold: Fold): List<Dot> {
-    val max = this.maxOf { it[fold.axis] ?: 0 }
-    val result = this.toCollection(mutableListOf()).toList()
-    result.filter { (it[fold.axis] ?: 0) > fold.value }
-        .forEach { it[fold.axis] = max - it[fold.axis]!! }
-    return result.distinct()
-}
+fun List<Dot>.foldIt(fold: Fold): List<Dot> =
+    this.map {
+        it[fold.axis] = fold.value - abs(it[fold.axis]!! - fold.value)
+        it
+    }.distinct()
 
 fun List<Dot>.print() {
-    val maxX = this.maxOf { it[Coordinate.Y] ?: 0}
-    val maxY = this.maxOf { it[Coordinate.X] ?: 0 }
+    val maxX = this.maxOf { it[Coordinate.X] ?: 0 }
+    val maxY = this.maxOf { it[Coordinate.Y] ?: 0 }
 
-    (0..maxY).forEach { y->
+    (0..maxY).forEach { y ->
         (0..maxX).forEach { x ->
-            print(if (this.any { it[Coordinate.X] == x && it[Coordinate.Y] == y }) "#" else ".")
+            print(if (this.any { it[Coordinate.X] == x && it[Coordinate.Y] == y }) "#" else " ")
         }
         println()
     }
+    println()
 }
 
 val coordinatePattern = Regex("""^(\d+),(\d+)$""")
