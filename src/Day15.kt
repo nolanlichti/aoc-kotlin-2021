@@ -1,19 +1,18 @@
 import kotlin.math.abs
-import kotlin.system.measureTimeMillis
 
 fun main() {
     debug.enabled = false
 
     fun getLeastRiskyPath(locations: List<Location>): Int {
-        val startLocation = locations.first { it.x == 0 && it.y == 0 }
+        val locationLookup = locations.associateBy { "${it.x}-${it.y}" }
+        val startLocation = locationLookup["0-0"]
         val endLocation = locations.maxByOrNull { it.x + it.y }!!
         val riskForLocation = mutableMapOf(startLocation to 0)
         val locationsToVisit = mutableListOf(startLocation)
 
         while (!riskForLocation.containsKey(endLocation)) {
             val currentLocation = locationsToVisit.minByOrNull { riskForLocation[it]!! }!!
-            val unvisitedLocations = locations - riskForLocation.keys
-            val neighborLocations = unvisitedLocations.filter { it.isAdjacentTo(currentLocation) }
+            val neighborLocations = locationLookup.getNeighborsForLocation(currentLocation)
 
             neighborLocations.forEach { location ->
                 val minRiskToLocation = riskForLocation[location]
@@ -40,22 +39,26 @@ fun main() {
     fun part2(input: List<String>): Int {
         val locationTile = input.getLocations()
         val locations = mutableListOf<Location>()
-        val maxX = locationTile.maxOf { it.x }
-        val maxY = locationTile.maxOf { it.y }
-        for (x in 0..maxX) {
-            for (y in 0..maxY) {
-                val location = locationTile.first { it.x == x && it.y == x }
-                for (xIncrement in 0..4) {
-                    for (yIncrement in 0..4) {
-                        var locationValue = location.value + xIncrement + yIncrement
+        val maxTileX = locationTile.maxOf { it.x }
+        val maxTileY = locationTile.maxOf { it.y }
+
+        for (templateX in 0..maxTileX) {
+            for (templateY in 0..maxTileY) {
+                val location = locationTile.first { it.x == templateX && it.y == templateY }
+                for (xShift in 0..4) {
+                    for (yShift in 0..4) {
+                        var locationValue = location.value + xShift + yShift
                         while (locationValue > 9) {
-                            locationValue -= 8
+                            locationValue -= 9
                         }
-                        locations.add(Location(x = x + xIncrement * (maxX + 1), y = y + yIncrement * (maxY + 1), value = locationValue))
+                        val xToModify = templateY + yShift * (maxTileY + 1)
+                        val yToModify = templateX + xShift * (maxTileX + 1)
+                        locations.add(Location(x = xToModify, y = yToModify, value = locationValue))
                     }
                 }
             }
         }
+
         return getLeastRiskyPath(locations)
     }
 
@@ -74,4 +77,13 @@ fun main() {
     println("Part 2: ${part2(input)}")
 }
 
+typealias LocationLookup = Map<String, Location>
+
 fun Location.distanceTo(other: Location) = abs(this.x - other.x) + abs(this.y - other.y)
+
+fun LocationLookup.getNeighborsForLocation(location: Location) = listOf(
+    this["${location.x - 1}-${location.y}"],
+    this["${location.x + 1}-${location.y}"],
+    this["${location.x}-${location.y + 1}"],
+    this["${location.x}-${location.y - 1}"]
+).filterNotNull()
